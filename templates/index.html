@@ -39,18 +39,11 @@
             width: 120px;
             height: 120px;
             margin: 0 auto 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 20px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        }
-
-        .logo svg {
-            width: 70px;
-            height: 70px;
-            fill: white;
         }
 
         h1 {
@@ -73,7 +66,7 @@
             width: 100%;
             max-width: 400px;
             margin: 30px auto;
-            background: #000;
+            background: #f5f5f5;
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -87,6 +80,25 @@
             object-fit: cover;
         }
 
+        #processedImage {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            object-fit: cover;
+            z-index: 2;
+        }
+
+        #processedImage.active {
+            display: block;
+        }
+
+        canvas {
+            display: none;
+        }
+
         .video-placeholder {
             position: absolute;
             top: 0;
@@ -94,11 +106,13 @@
             width: 100%;
             height: 100%;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-size: 18px;
+            background: #e8e8e8;
+            border: 3px dashed #999;
+            color: #666;
+            font-size: 16px;
             z-index: 1;
         }
 
@@ -198,22 +212,21 @@
     <div class="container">
         <div class="header">
             <div class="logo">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
+                <img style="width: 90px; height: 90px; border-radius: 50%;" src="https://media.licdn.com/dms/image/v2/C4E0BAQEJmrN07EY6uA/company-logo_200_200/company-logo_200_200/0/1630640480322?e=2147483647&v=beta&t=UCWR49Tx1cRON-3R-FWFH7-lbfYrGhv6SXPbhCywLIM" alt="agencia simon">
             </div>
-            <h1>YOLO Demo en Tiempo Real</h1>
+            <h1>Detección general en Tiempo Real</h1>
             <p class="description">
-                Sistema de detección de objetos con YOLO. Permite el acceso a tu cámara para comenzar 
-                a detectar objetos en tiempo real con tecnología de vanguardia.
+                Demostración de detección de objetos en tiempo real utilizando el modelo preentrenado.
             </p>
         </div>
 
         <div class="video-container">
             <div id="placeholder" class="video-placeholder">
-                Haz clic en "Iniciar Cámara" para comenzar
+                Haz clic en "Iniciar Cámara"
             </div>
             <video id="video" autoplay playsinline></video>
+            <img id="processedImage" alt="Procesado">
+            <canvas id="canvas"></canvas>
         </div>
 
         <div class="controls">
@@ -230,11 +243,57 @@
         const video = document.getElementById('video');
         const toggleBtn = document.getElementById('toggleBtn');
         const reloadBtn = document.getElementById('reloadBtn');
-        const placeholder = document.getElementById('placeholder');
-        const statusDiv = document.getElementById('status');
+        const canvas = document.getElementById('canvas');
+        const processedImage = document.getElementById('processedImage');
+        const ctx = canvas.getContext('2d');
         
         let stream = null;
         let isPlaying = false;
+        let processingInterval = null;
+        let isProcessing = false;
+        const FPS = 8;
+        const INTERVAL = 1000 / FPS;
+
+        async function processFrame() {
+            if (!isPlaying || isProcessing) return;
+
+            isProcessing = true;
+            try {
+                // Configurar canvas con dimensiones del video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                // Dibujar frame actual en canvas
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Convertir a base64
+                const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                
+                // Enviar al servidor para procesamiento
+                const response = await fetch('/process_frame', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ image: imageData })
+                });
+                
+                if (response.ok && isPlaying) {
+                    const data = await response.json();
+                    processedImage.src = data.image;
+                    processedImage.classList.add('active');
+                    
+                    // Actualizar estado con número de detecciones
+                    statusDiv.textContent = `Estado: Cámara activa | Detecciones: ${data.detections}`;
+                }
+            } catch (error) {
+                if (isPlaying) {
+                    console.error('Error procesando frame:', error);
+                }
+            } finally {
+                isProcessing = false;
+            }
+        }
 
         async function startCamera() {
             try {
@@ -251,8 +310,14 @@
                 placeholder.classList.add('hidden');
                 isPlaying = true;
                 
+                // Esperar a que el video esté listo
+                video.onloadedmetadata = () => {
+                    // Iniciar procesamiento a 15fps
+                    processingInterval = setInterval(processFrame, INTERVAL);
+                };
+                
                 toggleBtn.textContent = 'Detener Cámara';
-                statusDiv.textContent = 'Estado: Cámara activa';
+                statusDiv.textContent = 'Estado: Cámara activa | Procesando...';
                 statusDiv.className = 'status active';
             } catch (err) {
                 console.error('Error al acceder a la cámara:', err);
@@ -267,6 +332,15 @@
                 stream.getTracks().forEach(track => track.stop());
                 video.srcObject = null;
                 stream = null;
+                isPlaying = false;
+                
+                // Detener procesamiento
+                if (processingInterval) {
+                    clearInterval(processingInterval);
+                    processingInterval = null;
+                }
+                
+                processedImage.classList.remove('active');stream = null;
                 isPlaying = false;
                 
                 placeholder.classList.remove('hidden');
