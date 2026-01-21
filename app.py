@@ -30,6 +30,10 @@ else:
 def index():
     return render_template('index.html')
 
+@app.route('/health')
+def health():
+    return {'status': 'ok', 'message': 'Server is running'}, 200
+
 @app.route('/process_frame', methods=['POST'])
 def process_frame():
     try:
