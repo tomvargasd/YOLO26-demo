@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, Response
+from werkzeug.middleware.proxy_fix import ProxyFix
 import cv2
 import numpy as np
 import base64
@@ -7,6 +8,9 @@ import glob
 import os
 
 app = Flask(__name__)
+
+# Configurar para trabajar detrás de un proxy reverso (Traefik/Cloudflare)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 # Buscar modelo activo
 model_path = None
