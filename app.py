@@ -58,4 +58,13 @@ def process_frame():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000, ssl_context=('cert.pem', 'key.pem'))
+    import os
+    
+    # En producción/Docker no usar SSL (el proxy reverso lo maneja)
+    # En desarrollo local usar SSL
+    use_ssl = os.getenv('ENVIRONMENT', 'development') == 'development'
+    
+    if use_ssl and os.path.exists('cert.pem') and os.path.exists('key.pem'):
+        app.run(debug=True, host='0.0.0.0', port=5000, ssl_context=('cert.pem', 'key.pem'))
+    else:
+        app.run(debug=False, host='0.0.0.0', port=5000)

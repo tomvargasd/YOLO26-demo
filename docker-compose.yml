@@ -8,8 +8,7 @@ services:
       - "5000:5000"
     volumes:
       - ./models:/app/models
-      - ./cert.pem:/app/cert.pem:ro
-      - ./key.pem:/app/key.pem:ro
     environment:
       - PYTHONUNBUFFERED=1
+      - ENVIRONMENT=production
     restart: unless-stopped
