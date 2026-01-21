@@ -12,6 +12,9 @@ app = Flask(__name__)
 # Configurar para trabajar detrás de un proxy reverso (Traefik/Cloudflare)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
+# Deshabilitar redirecciones automáticas de trailing slash
+app.url_map.strict_slashes = False
+
 # Buscar modelo activo
 model_path = None
 active_models = glob.glob('models/active_*.pt')
