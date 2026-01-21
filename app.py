@@ -23,7 +23,8 @@ if active_models:
     print(f"Modelo activo cargado: {model_path}")
     model = YOLO(model_path)
 else:
-    print("No se encontró ningún modelo activo_*.pt")
+    print("⚠️  No se encontró ningún modelo activo_*.pt")
+    print("Por favor, sube un modelo YOLO con el prefijo 'active_' a la carpeta models/")
     model = None
 
 @app.route('/')
@@ -38,7 +39,7 @@ def health():
 def process_frame():
     try:
         if model is None:
-            return jsonify({'error': 'Modelo no disponible'}), 500
+            return jsonify({'error': 'No hay modelo YOLO cargado. Sube un modelo con prefijo active_ a la carpeta models/'}), 503
         
         # Obtener imagen en base64 del request
         data = request.json
