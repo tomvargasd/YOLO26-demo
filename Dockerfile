@@ -23,8 +23,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py .
 COPY templates/ templates/
 
-# Crear directorio para modelos (se montará como volumen)
-RUN mkdir -p models
+#copiar modelos
+COPY models/ models/
 
 # Exponer puerto
 EXPOSE 5000
