@@ -305,6 +305,9 @@
                     video.style.display = 'none';
                     processedImage.src = data.image;
                     processedImage.classList.add('active');
+                    
+                    // Cambiar texto del botón
+                    captureBtn.textContent = '📷 Tomar otra foto';
                 } else {
                     const error = await response.json();
                     alert('Error: ' + (error.error || 'No se pudo procesar la imagen'));
@@ -368,7 +371,16 @@
 
         captureBtn.addEventListener('click', () => {
             if (isPlaying && !isProcessing) {
-                processFrame();
+                // Si ya hay una imagen procesada, limpiar y mostrar video
+                if (processedImage.classList.contains('active')) {
+                    processedImage.classList.remove('active');
+                    processedImage.src = '';
+                    video.style.display = 'block';
+                    captureBtn.textContent = '📷 Tomar Foto';
+                } else {
+                    // Tomar nueva foto
+                    processFrame();
+                }
             }
         });
 
