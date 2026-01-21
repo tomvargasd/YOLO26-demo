@@ -307,7 +307,7 @@
                     processedImage.classList.add('active');
                 } else {
                     const error = await response.json();
-                    alert(`Error: ${error.error || 'No se pudo procesar la imagen'}');
+                    alert('Error: ' + (error.error || 'No se pudo procesar la imagen'));
                 }
             } catch (error) {
                 console.error('Error procesando imagen:', error);
