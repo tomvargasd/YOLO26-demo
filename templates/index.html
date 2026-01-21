@@ -31,14 +31,16 @@
         }
 
         .header {
-            text-align: center;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
             margin-bottom: 30px;
         }
 
         .logo {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 20px;
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -46,19 +48,29 @@
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
         }
 
+        .header-content {
+            flex: 1;
+        }
+
         h1 {
-            font-size: 32px;
+            font-size: 24px;
             color: #2d3748;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             font-weight: 700;
         }
 
         .description {
             color: #718096;
-            font-size: 16px;
-            line-height: 1.6;
-            max-width: 600px;
-            margin: 0 auto;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .top-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         .video-container {
@@ -76,7 +88,7 @@
         #video {
             width: 100%;
             height: 100%;
-            display: block;
+            display: none;
             object-fit: cover;
         }
 
@@ -125,6 +137,7 @@
             gap: 15px;
             justify-content: center;
             flex-wrap: wrap;
+            margin-top: 20px;
         }
 
         button {
@@ -149,13 +162,32 @@
         }
 
         #toggleBtn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #3b82f6;
             color: white;
             min-width: 180px;
         }
 
         #toggleBtn:hover {
-            background: linear-gradient(135deg, #5568d3 0%, #6a3f91 100%);
+            background: #2563eb;
+        }
+
+        #toggleBtn.active {
+            background: #6b7280;
+        }
+
+        #toggleBtn.active:hover {
+            background: #4b5563;
+        }
+
+        #captureBtn {
+            background: #10b981;
+            color: white;
+            min-width: 200px;
+            font-size: 18px;
+        }
+
+        #captureBtn:hover {
+            background: #059669;
         }
 
         #reloadBtn {
@@ -169,24 +201,7 @@
             border-color: #cbd5e0;
         }
 
-        .status {
-            text-align: center;
-            margin-top: 20px;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-        }
 
-        .status.active {
-            background: #c6f6d5;
-            color: #22543d;
-        }
-
-        .status.inactive {
-            background: #fed7d7;
-            color: #742a2a;
-        }
 
         @media (max-width: 600px) {
             .container {
@@ -194,12 +209,16 @@
             }
 
             h1 {
-                font-size: 24px;
+                font-size: 20px;
             }
 
             .logo {
-                width: 90px;
-                height: 90px;
+                width: 60px;
+                height: 60px;
+            }
+
+            .header {
+                gap: 15px;
             }
 
             button {
@@ -212,31 +231,32 @@
     <div class="container">
         <div class="header">
             <div class="logo">
-                <img style="width: 90px; height: 90px; border-radius: 50%;" src="https://media.licdn.com/dms/image/v2/C4E0BAQEJmrN07EY6uA/company-logo_200_200/company-logo_200_200/0/1630640480322?e=2147483647&v=beta&t=UCWR49Tx1cRON-3R-FWFH7-lbfYrGhv6SXPbhCywLIM" alt="agencia simon">
+                <img style="width: 100%; height: 100%; border-radius: 50%;" src="https://media.licdn.com/dms/image/v2/C4E0BAQEJmrN07EY6uA/company-logo_200_200/company-logo_200_200/0/1630640480322?e=2147483647&v=beta&t=UCWR49Tx1cRON-3R-FWFH7-lbfYrGhv6SXPbhCywLIM" alt="agencia simon">
             </div>
-            <h1>Detección general en Tiempo Real</h1>
-            <p class="description">
-                Demostración de detección de objetos en tiempo real utilizando el modelo preentrenado.
-            </p>
+            <div class="header-content">
+                <h1>Detección general en Tiempo Real</h1>
+                <p class="description">
+                    Demostración de detección de objetos en tiempo real utilizando el modelo preentrenado.
+                </p>
+            </div>
+        </div>
+
+        <div class="top-controls">
+            <button id="toggleBtn">Iniciar Cámara</button>
+            <button id="reloadBtn">Recargar Página</button>
         </div>
 
         <div class="video-container">
             <div id="placeholder" class="video-placeholder">
                 Haz clic en "Iniciar Cámara"
             </div>
-            <video id="video" autoplay playsinline style="display: none;"></video>
+            <video id="video" autoplay playsinline></video>
             <img id="processedImage" alt="Foto procesada">
             <canvas id="canvas"></canvas>
         </div>
 
         <div class="controls">
-            <button id="toggleBtn">Iniciar Cámara</button>
             <button id="captureBtn" style="display: none;">📷 Tomar Foto</button>
-            <button id="reloadBtn">Recargar Página</button>
-        </div>
-
-        <div id="status" class="status inactive">
-            Estado: Cámara desactivada
         </div>
     </div>
 
@@ -246,7 +266,6 @@
         const captureBtn = document.getElementById('captureBtn');
         const reloadBtn = document.getElementById('reloadBtn');
         const placeholder = document.getElementById('placeholder');
-        const statusDiv = document.getElementById('status');
         const canvas = document.getElementById('canvas');
         const processedImage = document.getElementById('processedImage');
         const ctx = canvas.getContext('2d');
@@ -259,8 +278,6 @@
             if (isProcessing) return;
 
             isProcessing = true;
-            statusDiv.textContent = 'Estado: Procesando imagen...';
-            statusDiv.className = 'status active';
             try {
                 // Configurar canvas con dimensiones del video
                 canvas.width = video.videoWidth;
@@ -288,19 +305,13 @@
                     video.style.display = 'none';
                     processedImage.src = data.image;
                     processedImage.classList.add('active');
-                    
-                    // Actualizar estado con número de detecciones
-                    statusDiv.textContent = `✅ Detecciones: ${data.detections} objeto(s) encontrado(s)`;
-                    statusDiv.className = 'status active';
                 } else {
                     const error = await response.json();
-                    statusDiv.textContent = `Error: ${error.error || 'No se pudo procesar la imagen'}`;
-                    statusDiv.className = 'status inactive';
+                    alert(`Error: ${error.error || 'No se pudo procesar la imagen'}');
                 }
             } catch (error) {
                 console.error('Error procesando imagen:', error);
-                statusDiv.textContent = 'Error: No se pudo procesar la imagen';
-                statusDiv.className = 'status inactive';
+                alert('Error: No se pudo procesar la imagen');
             } finally {
                 isProcessing = false;
             }
@@ -318,23 +329,16 @@
                 });
                 
                 video.srcObject = stream;
+                video.style.display = 'block';
                 placeholder.classList.add('hidden');
                 isPlaying = true;
                 
-                // Esperar a que el video esté listo
-                video.onloadedmetadata = () => {
-                    // Iniciar procesamiento a 15fps
-                    processingInterval = setInterval(processFrame, INTERVAL);
-                };
-                
                 toggleBtn.textContent = 'Detener Cámara';
-                statusDiv.textContent = 'Estado: Cámara activa | Procesando...';
-                statusDiv.className = 'status active';
+                toggleBtn.classList.add('active');
+                captureBtn.style.display = 'inline-block';
             } catch (err) {
                 console.error('Error al acceder a la cámara:', err);
                 alert('No se pudo acceder a la cámara. Por favor, verifica los permisos.');
-                statusDiv.textContent = 'Estado: Error al acceder a la cámara';
-                statusDiv.className = 'status inactive';
             }
         }
 
@@ -342,22 +346,15 @@
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
                 video.srcObject = null;
+                video.style.display = 'none';
                 stream = null;
                 isPlaying = false;
                 
-                // Detener procesamiento
-                if (processingInterval) {
-                    clearInterval(processingInterval);
-                    processingInterval = null;
-                }
-                
-                processedImage.classList.remove('active');stream = null;
-                isPlaying = false;
-                
+                processedImage.classList.remove('active');
                 placeholder.classList.remove('hidden');
                 toggleBtn.textContent = 'Iniciar Cámara';
-                statusDiv.textContent = 'Estado: Cámara desactivada';
-                statusDiv.className = 'status inactive';
+                toggleBtn.classList.remove('active');
+                captureBtn.style.display = 'none';
             }
         }
 
